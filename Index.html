@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IELTS VAULT NEPAL – Progress Dashboard</title>
+    <style>
+        :root {
+            --primary: #1e3c72;
+            --primary-light: #2a5298;
+            --accent: #ff6b35;
+            --bg: #f8f9fa;
+            --card: #ffffff;
+            --text: #212529;
+            --border: #dee2e6;
+            --radius: 16px;
+            --shadow: 0 8px 30px rgba(0,0,0,0.05);
+            --gold: #f4b400;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #f0f4f8, #e9ecef);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+        .dashboard {
+            max-width: 1200px;
+            width: 100%;
+            background: var(--card);
+            border-radius: 24px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            padding: 28px 32px;
+        }
+        .header h1 { font-size: 2rem; font-weight: 700; }
+        .header .subtitle { opacity: 0.9; margin-top: 6px; font-size: 1rem; }
+        .content { padding: 32px; }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+        .stat-card {
+            background: white;
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+            border-left: 4px solid var(--primary);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        .stat-card .stat-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin: 8px 0;
+        }
+        .stat-card .stat-label {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .section-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: var(--primary);
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 8px;
+        }
+        .chart-container {
+            background: white;
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+            margin-bottom: 32px;
+            height: 300px;
+            position: relative;
+        }
+        canvas { width: 100%; height: 100%; }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 6px;
+            background: white;
+            border-radius: var(--radius);
+            padding: 16px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+            margin-bottom: 32px;
+        }
+        .calendar-day {
+            aspect-ratio: 1;
+            background: #f8f9fa;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #adb5bd;
+            transition: 0.2s;
+        }
+        .calendar-day.active {
+            background: var(--gold);
+            color: white;
+            font-weight: 700;
+        }
+        .calendar-day.today {
+            border: 2px solid var(--accent);
+        }
+        .leaderboard-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background: white;
+            border-radius: var(--radius);
+            padding: 16px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+            margin-bottom: 32px;
+        }
+        .leader-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: var(--bg);
+            border-radius: 12px;
+            padding: 12px 20px;
+        }
+        .leader-rank {
+            width: 36px;
+            height: 36px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+        }
+        .leader-rank.gold { background: #f4b400; }
+        .leader-rank.silver { background: #adb5bd; }
+        .leader-rank.bronze { background: #b08d6a; }
+        .leader-info { flex:1; }
+        .leader-name { font-weight: 700; }
+        .leader-stats { font-size: 0.85rem; color: var(--text-light); }
+        .quick-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        button, .btn-link {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 30px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 0.95rem;
+            text-decoration: none;
+            display: inline-block;
+        }
+        button:hover, .btn-link:hover { background: var(--primary-light); }
+        button.secondary { background: white; color: var(--primary); border: 2px solid var(--primary); }
+        button.accent { background: var(--accent); }
+    </style>
+</head>
+<body>
+<div class="dashboard">
+    <div class="header">
+        <h1>📊 IELTS VAULT NEPAL</h1>
+        <div class="subtitle">Your Progress & Motivation Dashboard</div>
+    </div>
+    <div class="content">
+        <!-- Stat Cards -->
+        <div class="stats-grid" id="stats-cards">
+            <div class="stat-card"><span class="stat-label">Current Band</span><span class="stat-value" id="band-value">--</span><span class="stat-label">overall</span></div>
+            <div class="stat-card"><span class="stat-label">Sessions</span><span class="stat-value" id="sessions-value">0</span><span class="stat-label">completed</span></div>
+            <div class="stat-card"><span class="stat-label">Streak</span><span class="stat-value" id="streak-value">0</span><span class="stat-label">day streak</span></div>
+            <div class="stat-card"><span class="stat-label">Mocks Done</span><span class="stat-value" id="mocks-value">0</span><span class="stat-label">full tests</span></div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="section-title">⚡ Quick Actions</div>
+        <div class="quick-actions">
+            <button onclick="window.location.href='diagnostic.html'">📋 Diagnostic Test</button>
+            <button onclick="window.location.href='practice.html'">🎯 Section Practice</button>
+            <button onclick="window.location.href='mocktests.html'">📝 Mock Tests</button>
+            <button onclick="window.location.href='learninghub.html'">📚 Learning Hub</button>
+            <button class="accent" id="log-session-btn">✅ Log Today's Session</button>
+        </div>
+
+        <!-- Progress Chart -->
+        <div class="section-title">📈 Progress Trend</div>
+        <div class="chart-container">
+            <canvas id="progress-chart"></canvas>
+        </div>
+
+        <!-- Streak Calendar -->
+        <div class="section-title">🔥 28‑Day Streak Calendar</div>
+        <div class="calendar-grid" id="calendar-grid">
+            <!-- generated by JS -->
+        </div>
+        <div style="display:flex; gap:12px; margin-bottom:20px;">
+            <span style="background:var(--gold); padding:4px 12px; border-radius:20px; color:white; font-weight:600;">⚡ Active day</span>
+            <span style="border:2px solid var(--accent); padding:4px 12px; border-radius:20px; font-weight:600;">Today</span>
+        </div>
+
+        <!-- Leaderboard -->
+        <div class="section-title">🏆 Class Leaderboard</div>
+        <div class="leaderboard-list" id="leaderboard-list">
+            <!-- generated by JS -->
+        </div>
+    </div>
+</div>
+
+<script>
+    // ---------- DATA RETRIEVAL ----------
+    // Diagnostic overall band
+    let overallBand = 5.5;
+    const diagData = JSON.parse(localStorage.getItem('ieltsvault_diagnostic'));
+    if (diagData && diagData.overall) {
+        overallBand = diagData.overall;
+    }
+
+    // Mock tests history
+    const mockHistory = JSON.parse(localStorage.getItem('ielts_mock_history') || '[]');
+    const mocksDone = mockHistory.length;
+    // If mock history exists, use latest mock overall as current band (overwrites diagnostic)
+    if (mockHistory.length > 0) {
+        const latestMock = mockHistory.reduce((a,b) => new Date(a.date) > new Date(b.date) ? a : b);
+        overallBand = latestMock.overall;
+    }
+
+    // Activity dates (for streak and sessions)
+    let activityDates = JSON.parse(localStorage.getItem('ielts_activity_dates') || '[]');
+    // Ensure dates are strings YYYY-MM-DD
+    const todayStr = new Date().toISOString().slice(0,10);
+    // If none, add some sample dates for demo (last 3 days)
+    if (activityDates.length === 0) {
+        const d1 = new Date();
+        const sampleDates = [];
+        for (let i = 0; i < 3; i++) {
+            d1.setDate(d1.getDate() - i);
+            sampleDates.push(d1.toISOString().slice(0,10));
+        }
+        activityDates = sampleDates.reverse();
+        localStorage.setItem('ielts_activity_dates', JSON.stringify(activityDates));
+    }
+    // Clean out future dates if any
+    activityDates = activityDates.filter(d => d <= todayStr);
+    const sessionsCompleted = activityDates.length;
+    // Streak: count consecutive days backwards from today
+    let streak = 0;
+    const dateSet = new Set(activityDates);
+    let checkDate = new Date();
+    while (dateSet.has(checkDate.toISOString().slice(0,10))) {
+        streak++;
+        checkDate.setDate(checkDate.getDate() - 1);
+    }
+
+    // Update stat cards
+    document.getElementById('band-value').textContent = overallBand;
+    document.getElementById('sessions-value').textContent = sessionsCompleted;
+    document.getElementById('streak-value').textContent = streak;
+    document.getElementById('mocks-value').textContent = mocksDone;
+
+    // ---------- PROGRESS CHART ----------
+    const canvas = document.getElementById('progress-chart');
+    const ctx = canvas.getContext('2d');
+    const chartData = [];
+    // Add diagnostic if exists
+    if (diagData && diagData.date) {
+        chartData.push({date: diagData.date, score: diagData.overall});
+    }
+    // Add mock tests
+    mockHistory.forEach(m => chartData.push({date: m.date, score: m.overall}));
+    // Sort by date
+    chartData.sort((a,b) => new Date(a.date) - new Date(b.date));
+
+    function drawChart() {
+        const w = canvas.clientWidth;
+        const h = canvas.clientHeight;
+        canvas.width = w;
+        canvas.height = h;
+        ctx.clearRect(0,0,w,h);
+        if (chartData.length === 0) {
+            ctx.fillStyle = '#6c757d';
+            ctx.font = '16px Segoe UI';
+            ctx.textAlign = 'center';
+            ctx.fillText('No data yet – complete a test!', w/2, h/2);
+            return;
+        }
+        const padding = {top:20, right:30, bottom:40, left:50};
+        const plotW = w - padding.left - padding.right;
+        const plotH = h - padding.top - padding.bottom;
+        // Y axis scaling (band 0-9)
+        const minY = 0, maxY = 9;
+        const xStep = plotW / Math.max(1, chartData.length - 1);
+        // Draw axes
+        ctx.beginPath();
+        ctx.strokeStyle = '#dee2e6';
+        ctx.lineWidth = 1;
+        // Y axis ticks
+        for (let i = minY; i <= maxY; i += 0.5) {
+            const y = padding.top + plotH - (i / maxY * plotH);
+            ctx.fillStyle = '#adb5bd';
+            ctx.font = '11px Segoe UI';
+            ctx.fillText(i.toFixed(1), 5, y+3);
+            ctx.beginPath();
+            ctx.moveTo(padding.left, y);
+            ctx.lineTo(w - padding.right, y);
+            ctx.strokeStyle = '#f1f3f5';
+            ctx.stroke();
+        }
+        // X axis labels
+        chartData.forEach((pt, idx) => {
+            const x = padding.left + idx * xStep;
+            ctx.fillStyle = '#adb5bd';
+            ctx.font = '10px Segoe UI';
+            ctx.fillText(pt.date.slice(5), x-15, h - padding.bottom + 20);
+        });
+        // Plot line
+        ctx.beginPath();
+        ctx.strokeStyle = '#2a5298';
+        ctx.lineWidth = 3;
+        chartData.forEach((pt, idx) => {
+            const x = padding.left + idx * xStep;
+            const y = padding.top + plotH - (pt.score / maxY * plotH);
+            if (idx === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+        // Points
+        chartData.forEach((pt, idx) => {
+            const x = padding.left + idx * xStep;
+            const y = padding.top + plotH - (pt.score / maxY * plotH);
+            ctx.beginPath();
+            ctx.arc(x, y, 5, 0, Math.PI*2);
+            ctx.fillStyle = '#ff6b35';
+            ctx.fill();
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.fillStyle = '#212529';
+            ctx.font = 'bold 11px Segoe UI';
+            ctx.fillText(pt.score, x-8, y-10);
+        });
+    }
+    window.addEventListener('resize', drawChart);
+    drawChart();
+
+    // ---------- STREAK CALENDAR ----------
+    function renderCalendar() {
+        const grid = document.getElementById('calendar-grid');
+        grid.innerHTML = '';
+        // last 28 days (including today)
+        for (let i = 27; i >= 0; i--) {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            const dateStr = d.toISOString().slice(0,10);
+            const dayNum = d.getDate();
+            const div = document.createElement('div');
+            div.className = 'calendar-day';
+            div.textContent = dayNum;
+            if (dateSet.has(dateStr)) div.classList.add('active');
+            if (dateStr === todayStr) div.classList.add('today');
+            grid.appendChild(div);
+        }
+        // We need 28 cells, keep as is.
+    }
+    renderCalendar();
+
+    // ---------- LEADERBOARD ----------
+    function buildLeaderboard() {
+        const container = document.getElementById('leaderboard-list');
+        // Static users (hardcoded)
+        const users = [
+            { name: 'You', band: overallBand, streak: streak, sessions: sessionsCompleted },
+            { name: 'Sita', band: 7.0, streak: 12, sessions: 34 },
+            { name: 'Ram', band: 6.5, streak: 5, sessions: 18 }
+        ];
+        // Sort by band descending
+        users.sort((a,b) => b.band - a.band);
+        const ranks = ['gold','silver','bronze'];
+        container.innerHTML = users.map((u,i) => `
+            <div class="leader-item">
+                <div class="leader-rank ${i<3 ? ranks[i] : ''}">${i+1}</div>
+                <div class="leader-info">
+                    <div class="leader-name">${u.name}</div>
+                    <div class="leader-stats">Band ${u.band} | Streak ${u.streak} days | ${u.sessions} sessions</div>
+                </div>
+                <div style="font-weight:700; color:var(--primary);">${u.band}</div>
+            </div>
+        `).join('');
+    }
+    buildLeaderboard();
+
+    // ---------- LOG SESSION BUTTON ----------
+    document.getElementById('log-session-btn').addEventListener('click', () => {
+        const today = new Date().toISOString().slice(0,10);
+        let dates = JSON.parse(localStorage.getItem('ielts_activity_dates') || '[]');
+        if (!dates.includes(today)) {
+            dates.push(today);
+            localStorage.setItem('ielts_activity_dates', JSON.stringify(dates));
+            // Update UI
+            location.reload();
+        } else {
+            alert('Today already logged!');
+        }
+    });
+</script>
+</body>
+</html>
